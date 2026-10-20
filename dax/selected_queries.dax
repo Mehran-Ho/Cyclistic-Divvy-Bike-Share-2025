@@ -1,0 +1,104 @@
+// Selected DAX Queries - 2025 Divvy Bike-Share Analysis
+// These six queries are drawn from the Power BI DAX Query View.
+// Each EVALUATE statement returns a separate result set.
+// Execute queries individually if your DAX editor expects one result set.
+// Source table: 'Divvy_2025 (2)' (cleaned 2025 rides).
+
+// Query 1 Ridership by Rider Type and Bicycle Type
+// Counts rides for each rider-type and bicycle-type combination.
+EVALUATE
+    SUMMARIZECOLUMNS(
+        'Divvy_2025 (2)'[member_casual],
+        'Divvy_2025 (2)'[rideable_type],
+        "Number of Rides", COUNTROWS('Divvy_2025 (2)')
+    )
+
+// Query 2 Hourly Ridership by Rider Type
+// Counts rides by starting hour (0-23) and rider type.
+EVALUATE
+    SUMMARIZE(
+        ADDCOLUMNS(
+            'Divvy_2025 (2)',
+            "Start Hour", HOUR([started_at])
+        ),
+        [Start Hour],
+        'Divvy_2025 (2)'[member_casual],
+        "Number of Rides", COUNTROWS('Divvy_2025 (2)')
+    )
+ORDER BY
+    'Divvy_2025 (2)'[member_casual] ASC,
+    [Start Hour] ASC
+
+// Query 3 Ridership by Day of Week and Rider Type
+// WEEKDAY(..., 2) maps Monday to 1 and Sunday to 7.
+EVALUATE
+    SUMMARIZE(
+        ADDCOLUMNS(
+            'Divvy_2025 (2)',
+            "Day of Week", WEEKDAY([started_at], 2)
+        ),
+        [Day of Week],
+        'Divvy_2025 (2)'[member_casual],
+        "Number of Rides", COUNTROWS('Divvy_2025 (2)')
+    )
+ORDER BY
+    'Divvy_2025 (2)'[member_casual] ASC,
+    [Day of Week] ASC
+
+// Query 4 Monthly Ridership by Rider Type
+// MONTH() returns 1 (January) through 12 (December).
+EVALUATE
+    SUMMARIZE(
+        ADDCOLUMNS(
+            'Divvy_2025 (2)',
+            "Start Month", MONTH([started_at])
+        ),
+        [Start Month],
+        'Divvy_2025 (2)'[member_casual],
+        "Number of Rides", COUNTROWS('Divvy_2025 (2)')
+    )
+ORDER BY
+    'Divvy_2025 (2)'[member_casual] ASC,
+    [Start Month] ASC
+
+// Query 5 Top 10 Starting Stations for Casual Riders
+// Excludes blank/whitespace-only starting station names.
+EVALUATE
+    TOPN(
+        10,
+        SUMMARIZE(
+            FILTER(
+                'Divvy_2025 (2)',
+                'Divvy_2025 (2)'[member_casual] = "casual"
+                && LEN(TRIM('Divvy_2025 (2)'[start_station_name])) > 0
+            ),
+            'Divvy_2025 (2)'[start_station_name],
+            "Number of Rides", COUNTROWS('Divvy_2025 (2)')
+        ),
+        [Number of Rides],
+        DESC
+    )
+ORDER BY
+    [Number of Rides] DESC
+
+// Query 6 Top 10 Routes for Casual Riders
+// Excludes blank station names.
+EVALUATE
+    TOPN(
+        10,
+        SUMMARIZE(
+            FILTER(
+                'Divvy_2025 (2)',
+                'Divvy_2025 (2)'[member_casual] = "casual"
+                && LEN(TRIM('Divvy_2025 (2)'[start_station_name])) > 0
+                && LEN(TRIM('Divvy_2025 (2)'[end_station_name])) > 0
+            ),
+            'Divvy_2025 (2)'[start_station_name],
+            'Divvy_2025 (2)'[end_station_name],
+            "Number of Rides", COUNTROWS('Divvy_2025 (2)')
+        ),
+        [Number of Rides],
+        DESC
+    )
+ORDER BY
+    [Number of Rides] DESC
