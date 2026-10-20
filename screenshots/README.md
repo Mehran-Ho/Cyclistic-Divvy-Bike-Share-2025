@@ -1,1 +1,1 @@
-ower BI report screenshots
+Power BI report screenshots
